@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'galaxy_super_secret_key_99';
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: '*', // In production, replace with your frontend URL
+  origin: '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -29,8 +29,7 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('🚀 Laptop Galaxy Core: Database Connection Established'))
   .catch(err => {
     console.error('❌ Database connection failed:', err);
-    // Fix: Cast process to any to resolve 'exit' property error on type 'Process'
-    (process as any).exit(1);
+    process.exit(1);
   });
 
 // --- Schemas & Models ---
@@ -74,7 +73,6 @@ const Inquiry = mongoose.model('Inquiry', InquirySchema);
 
 // --- Routes ---
 
-// Public Products API
 app.get('/api/products', async (req, res) => {
   try {
     const items = await Inventory.find().sort({ createdAt: -1 });
@@ -84,7 +82,6 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// Admin Auth
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -100,7 +97,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Product Management (Protected in real scenario)
 app.post('/api/products', async (req, res) => {
   try {
     const item = new Inventory(req.body);
@@ -129,7 +125,6 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// Inquiries
 app.post('/api/inquiries', async (req, res) => {
   try {
     const inquiry = new Inquiry(req.body);
@@ -149,7 +144,6 @@ app.get('/api/inquiries', async (req, res) => {
   }
 });
 
-// Root Route
 app.get('/', (req, res) => {
   res.send('🌌 Laptop Galaxy API is online.');
 });
