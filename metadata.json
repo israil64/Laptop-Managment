@@ -1,0 +1,8 @@
+{
+  "name": "Laptop Galaxy - Premium Second-Hand E-Commerce",
+  "description": "A high-end, full-stack e-commerce platform for refurbished laptops and components with advanced order tracking and admin controls.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
