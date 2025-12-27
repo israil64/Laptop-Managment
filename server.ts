@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 const JWT_SECRET = process.env.JWT_SECRET || 'galaxy_super_secret_key_99';
 
 // Middleware
@@ -27,7 +27,7 @@ app.use(cors({
 
 // Basic Security Headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for ease of deployment with external images
+  contentSecurityPolicy: false, 
 }));
 
 // MongoDB Connection
@@ -66,17 +66,8 @@ const InventorySchema = new mongoose.Schema({
   damageNotes: String
 }, { timestamps: true });
 
-const InquirySchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  type: String,
-  message: String,
-  date: { type: Date, default: Date.now }
-});
-
 const Admin = mongoose.model('Admin', AdminSchema);
 const Inventory = mongoose.model('Inventory', InventorySchema);
-const Inquiry = mongoose.model('Inquiry', InquirySchema);
 
 // --- API Routes ---
 
@@ -104,16 +95,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.post('/api/products', async (req, res) => {
-  try {
-    const item = new Inventory(req.body);
-    await item.save();
-    res.status(201).json(item);
-  } catch (error) {
-    res.status(400).json({ message: 'Error adding product' });
-  }
-});
-
 app.get('/api/health', (req, res) => {
   res.json({ status: 'online', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
@@ -121,14 +102,15 @@ app.get('/api/health', (req, res) => {
 // --- Static Frontend Serving ---
 
 // Serve the 'dist' folder created by 'npm run build'
-app.use(express.static(path.join(__dirname, 'dist')));
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
 
-// IMPORTANT: Catch-all route to serve the React app for any non-API request
+// Catch-all route to serve the React app for any non-API request
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ message: 'API endpoint not found' });
   }
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`🛰️  Laptop Galaxy Core: Online on Port ${PORT}`));
