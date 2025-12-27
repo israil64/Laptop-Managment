@@ -25,9 +25,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Basic Security Headers
+// Security Headers - Relaxed for Internal Static Serving
 app.use(helmet({
-  contentSecurityPolicy: false, 
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
 }));
 
 // MongoDB Connection
@@ -101,16 +102,22 @@ app.get('/api/health', (req, res) => {
 
 // --- Static Frontend Serving ---
 
-// Serve the 'dist' folder created by 'npm run build'
 const distPath = path.join(__dirname, 'dist');
+console.log(`📦 Serving static files from: ${distPath}`);
+
 app.use(express.static(distPath));
 
-// Catch-all route to serve the React app for any non-API request
+// Catch-all route for SPA routing
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ message: 'API endpoint not found' });
   }
-  res.sendFile(path.join(distPath, 'index.html'));
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) {
+      console.error('❌ Error sending index.html:', err);
+      res.status(500).send('Frontend not built or index.html missing in dist/');
+    }
+  });
 });
 
 app.listen(PORT, () => console.log(`🛰️  Laptop Galaxy Core: Online on Port ${PORT}`));
