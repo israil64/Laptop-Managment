@@ -18,7 +18,8 @@ const PORT = process.env.PORT || 8000;
 const JWT_SECRET = process.env.JWT_SECRET || 'galaxy_super_secret_key_99';
 
 // Middleware
-app.use(express.json());
+// Fix: Added 'as any' to fix "No overload matches this call" type mismatch error for express.json()
+app.use(express.json() as any);
 app.use(cors({
   origin: '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -26,10 +27,11 @@ app.use(cors({
 }));
 
 // Security Headers
+// Fix: Added 'as any' to fix "No overload matches this call" type mismatch error for helmet()
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
-}));
+}) as any);
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://israilsara786_db_user:IuVBDUnfmS5Gl3Z9@cluster0.uraur2q.mongodb.net/?appName=Cluster0";
@@ -103,19 +105,22 @@ app.get('/api/health', (req, res) => {
 // --- Static Frontend Serving ---
 
 const distPath = path.resolve(__dirname, 'dist');
-console.log(`📦 Serving static files from: ${distPath}`);
+console.log(`📦 Production Mode: Serving static files from ${distPath}`);
 
-app.use(express.static(distPath));
+// Fix: Added 'as any' to fix "No overload matches this call" type mismatch error for express.static()
+app.use(express.static(distPath) as any);
 
 // Catch-all route for SPA routing
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ message: 'API endpoint not found' });
   }
-  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+  
+  const indexPath = path.join(distPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
     if (err) {
-      console.error('❌ Error sending index.html. Ensure "npm run build" completed.');
-      res.status(500).send('Application build missing. Please check logs.');
+      console.error(`❌ Critical Error: Could not find index.html at ${indexPath}. Ensure build succeeded.`);
+      res.status(500).send('Application build missing or inaccessible. Check deployment logs.');
     }
   });
 });
