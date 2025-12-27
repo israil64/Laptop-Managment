@@ -1,4 +1,3 @@
-
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -6,8 +5,13 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,7 +24,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(helmet());
+
+// Basic Security Headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for ease of deployment with external images
+}));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://israilsara786_db_user:IuVBDUnfmS5Gl3Z9@cluster0.uraur2q.mongodb.net/?appName=Cluster0";
@@ -29,7 +37,6 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('🚀 Laptop Galaxy Core: Database Connection Established'))
   .catch(err => {
     console.error('❌ Database connection failed:', err);
-    process.exit(1);
   });
 
 // --- Schemas & Models ---
@@ -71,7 +78,7 @@ const Admin = mongoose.model('Admin', AdminSchema);
 const Inventory = mongoose.model('Inventory', InventorySchema);
 const Inquiry = mongoose.model('Inquiry', InquirySchema);
 
-// --- Routes ---
+// --- API Routes ---
 
 app.get('/api/products', async (req, res) => {
   try {
@@ -107,45 +114,21 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-app.put('/api/products/:id', async (req, res) => {
-  try {
-    const updated = await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
-  } catch (error) {
-    res.status(400).json({ message: 'Error updating product' });
-  }
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'online', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
-app.delete('/api/products/:id', async (req, res) => {
-  try {
-    await Inventory.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Product deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting product' });
-  }
-});
+// --- Static Frontend Serving ---
 
-app.post('/api/inquiries', async (req, res) => {
-  try {
-    const inquiry = new Inquiry(req.body);
-    await inquiry.save();
-    res.status(201).json(inquiry);
-  } catch (error) {
-    res.status(400).json({ message: 'Error saving inquiry' });
-  }
-});
+// Serve the 'dist' folder created by 'npm run build'
+app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('/api/inquiries', async (req, res) => {
-  try {
-    const inquiries = await Inquiry.find().sort({ date: -1 });
-    res.json(inquiries);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching inquiries' });
+// IMPORTANT: Catch-all route to serve the React app for any non-API request
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ message: 'API endpoint not found' });
   }
-});
-
-app.get('/', (req, res) => {
-  res.send('🌌 Laptop Galaxy API is online.');
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`🛰️  Laptop Galaxy Core: Online on Port ${PORT}`));
