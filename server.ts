@@ -25,7 +25,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Security Headers - Relaxed for Internal Static Serving
+// Security Headers
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -102,7 +102,7 @@ app.get('/api/health', (req, res) => {
 
 // --- Static Frontend Serving ---
 
-const distPath = path.join(__dirname, 'dist');
+const distPath = path.resolve(__dirname, 'dist');
 console.log(`📦 Serving static files from: ${distPath}`);
 
 app.use(express.static(distPath));
@@ -114,8 +114,8 @@ app.get('*', (req, res) => {
   }
   res.sendFile(path.join(distPath, 'index.html'), (err) => {
     if (err) {
-      console.error('❌ Error sending index.html:', err);
-      res.status(500).send('Frontend not built or index.html missing in dist/');
+      console.error('❌ Error sending index.html. Ensure "npm run build" completed.');
+      res.status(500).send('Application build missing. Please check logs.');
     }
   });
 });
