@@ -1,8 +1,7 @@
-
-import axios from 'https://esm.sh/axios@^1.7.9';
+import axios from 'axios';
 
 // In production, set VITE_API_URL in your deployment platform (e.g., Netlify/Vercel)
-// to your Render.com backend URL.
+// to your backend URL (Koyeb/Adaptable).
 const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
@@ -26,7 +25,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Potentially redirect to login or clear stale tokens
       console.warn('Session expired or unauthorized access.');
     }
     return Promise.reject(error);
